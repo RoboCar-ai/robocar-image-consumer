@@ -1,0 +1,17 @@
+version: '3'
+services:
+  broker:
+    image: eclipse-mosquitto
+    ports:
+      - 1883:1883
+      - 9001:9001
+  consumer:
+    build: .
+    image: blown302/robocar-image-consumer
+    environment:
+      - BROKER_HOST=broker
+      - CLIENT_ID=blown302
+      - PYTHONUNBUFFERED=0
+    command: ['python3', '/app/app.py']
+    volumes:
+      - .:/app
