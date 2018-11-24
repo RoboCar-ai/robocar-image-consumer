@@ -1,12 +1,44 @@
 from paho.mqtt.client import Client
-from os import environ
+from os import environ, path
+from models.image_pb2 import Image as ImageModel
+import json
 
 BROKER_HOST = environ.get('BROKER_HOST')
 TOPIC = 'robocars/{}/image-telemetry'.format(environ.get('CLIENT_ID'))
 
+DATA_DIRECTORY = '/data/data'
+SESSIONS_DIRECTORY = 'sessions'
+SESSIONS_DIRECTORY_PATH = path.join(DATA_DIRECTORY, SESSIONS_DIRECTORY)
+SESSIONS_FILE_PATH = path.join(SESSIONS_DIRECTORY_PATH, 'sessions.json')
+
 
 def image_telemetry_handler(client, userdata, msg):
-    print(msg.payload)
+    with open(SESSIONS_FILE_PATH, 'r') as f:
+        session = json.loads(f.read())
+
+    name = session['name']
+    count = session['count']
+
+    image = ImageModel()
+    image.ParseFromString(msg.payload)
+    print(image.name)
+    print(image.telemetry.mode)
+    dir = path.join(SESSIONS_DIRECTORY_PATH, '{}::{}'.format(name, count))
+    image_path = path.join(dir, image.name)
+    json_path = path.join(dir, '{}.json'.format(image.telemetry.image_id))
+
+    with open(image_path, 'wb') as f:
+        f.write(image.data)
+
+    tele = {
+        'user/angle': image.telemetry.steering_angle,
+        'user/throttle': image.telemetry.steering_angle,
+        'cam/image_array': image.name,
+        'user/mode': image.telemetry.mode
+    }
+
+    with open(json_path, 'w') as f:
+        f.write(json.dumps(tele))
 
 
 def on_connect(client, userdata, flags, rc):
