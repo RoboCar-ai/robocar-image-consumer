@@ -21,12 +21,9 @@ def image_telemetry_handler(client, userdata, msg):
 
     image = ImageModel()
     image.ParseFromString(msg.payload)
-    print(image.name)
-    print(image.telemetry.mode)
-    dir = path.join(SESSIONS_DIRECTORY_PATH, '{}::{}'.format(name, count))
+    dir = path.join(SESSIONS_DIRECTORY_PATH, name, count)
     image_path = path.join(dir, image.name)
-    json_path = path.join(dir, '{}.json'.format(image.telemetry.image_id))
-
+    json_path = path.join(dir, 'record_{}.json'.format(int(image.telemetry.image_id)))
     with open(image_path, 'wb') as f:
         f.write(image.data)
 
