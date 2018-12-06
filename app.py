@@ -16,14 +16,14 @@ STATE_FILE_PATH = path.join(SESSIONS_DIRECTORY_PATH, 'state.json')
 
 
 def state_handler(client, userdata, msg):
-    message = msg.payload.decode('utf8')
+    message = json.loads(msg.payload.decode('utf8'))
 
-    connection_status = message['connection_status']
+    connection_status = message['connectionStatus']
 
     with open(STATE_FILE_PATH, 'r') as f:
         state = json.loads(f.read())
 
-    state['connection_status'] = connection_status
+    state['connectionStatus'] = connection_status
 
     with open (STATE_FILE_PATH, 'w') as f:
         f.write(json.dumps(state))
@@ -66,10 +66,17 @@ def on_connect(client, userdata, flags, rc):
     client.message_callback_add(ROBOCAR_STATE_TOPIC, state_handler)
 
 
+def init():
+    if not path.exists(STATE_FILE_PATH):
+        with open(STATE_FILE_PATH, 'w') as f:
+            f.write('{"connectionStatus":"disconnected"}')
+
+
 client = Client()
 client.on_connect = on_connect
 
 if __name__ == '__main__':
+    init()
     print('Connecting to hub at:', BROKER_HOST)
     client.connect(BROKER_HOST)
     client.loop_forever()
